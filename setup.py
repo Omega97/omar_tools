@@ -1,4 +1,5 @@
 from setuptools import setup
+import setuptools
 
 setup(name='omar_tools',
       version='0.9',
