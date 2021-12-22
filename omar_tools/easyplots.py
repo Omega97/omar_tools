@@ -59,11 +59,11 @@ class Plot:
         if self.ax is not None:
             plt.sca(self.ax)
 
-    def scatter(self, x, y, label='data', zorder=2, **kwargs):
+    def scatter(self, x, y, marker=None, color=None, label='data', zorder=2, **kwargs):
         self.sca()
         self.x_scatter = np.array(x)
         self.y_scatter = np.array(y)
-        self._scatter = plt.scatter(x, y, label=label, zorder=zorder, **kwargs)
+        self._scatter = plt.scatter(x, y, marker=marker, color=color, label=label, zorder=zorder, **kwargs)
 
     def plot(self, x, y=None, func=None, linestyle='--', label='fit', **kwargs):
         """used to make fit"""
@@ -75,10 +75,10 @@ class Plot:
         self.y_plot = np.array(y)
         self._plot = plt.plot(x, y, linestyle=linestyle, label=label, **kwargs)
 
-    def errorbar(self, x, y, yerr=None, xerr=None, fmt='none',
+    def errorbar(self, x, y, yerr=None, xerr=None, color='k', fmt='none',
                  solid_capstyle='projecting', capsize=3, label='errors', **kwargs):
         self.sca()
-        self._errorbar = plt.errorbar(x, y, yerr=yerr, xerr=xerr, fmt=fmt, solid_capstyle=solid_capstyle,
+        self._errorbar = plt.errorbar(x, y, yerr=yerr, xerr=xerr, color=color, fmt=fmt, solid_capstyle=solid_capstyle,
                                       capsize=capsize, label=label, **kwargs)
 
     def hist(self, x, x_range=None, n_bins=10, delta_x=None,
@@ -107,21 +107,21 @@ class Plot:
         self.sca()
         plt.legend()
 
-    def title(self, label, loc=None, **kwargs):
+    def title(self, label, **kwargs):
         self.sca()
-        plt.title(label, loc=loc, **kwargs)
+        plt.title(label, **kwargs)
 
     def text(self, x, y, s, **kwargs):
         self.sca()
         plt.text(x, y, s, **kwargs)
 
-    def xlabel(self, xlabel, loc=None, **kwargs):
+    def xlabel(self, xlabel, **kwargs):
         self.sca()
-        plt.xlabel(xlabel, loc=loc, **kwargs)
+        plt.xlabel(xlabel, **kwargs)
 
-    def ylabel(self, ylabel, loc=None, **kwargs):
+    def ylabel(self, ylabel, **kwargs):
         self.sca()
-        plt.ylabel(ylabel, loc=loc, **kwargs)
+        plt.ylabel(ylabel, **kwargs)
 
 
 class Subplots:
@@ -183,8 +183,8 @@ def test_single():
 def test_hist():
     p = Plot()
     p.title('Hist')
-    p.xlabel('xlabel', loc='right')
-    p.ylabel('ylabel', loc='top')
+    p.xlabel('xlabel')
+    p.ylabel('ylabel')
     p.text(0, 0, 'origin')
     p.hist(x=[1, 2, 2, 3, 3], x_range=[.5, 3.5], delta_x=1)
     print(p.x_hist)
@@ -220,7 +220,7 @@ def test_subplots():
 
 
 if __name__ == '__main__':
-    # test_single()
-    # test_hist()
-    # test_multiple()
+    test_single()
+    test_hist()
+    test_multiple()
     test_subplots()
