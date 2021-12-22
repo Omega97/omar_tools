@@ -81,17 +81,25 @@ class Plot:
         self._errorbar = plt.errorbar(x, y, yerr=yerr, xerr=xerr, fmt=fmt, solid_capstyle=solid_capstyle,
                                       capsize=capsize, label=label, **kwargs)
 
-    def hist(self, data, x_range, delta_x, extend=False, linewidth=1.2, density=True, edgecolor='black'):
+    def hist(self, x, x_range=None, n_bins=10, delta_x=None,
+             extend=False, linewidth=1.2, density=True, edgecolor='black'):
         """
         - plot histogram
         - set self.x, self.y
         extend: make x_range wider by half of delta_x on left and right
         """
         self.sca()
+
+        if x_range is None:
+            x_range = [min(x), max(x)]
+
+        if delta_x is None:
+            delta_x = (x_range[-1] - x_range[0]) / n_bins
+
         if extend:
             x_range = [x_range[0]-delta_x/2, x_range[1]+delta_x/2]
         n_bins = round((x_range[1] - x_range[0]) / delta_x)
-        self.y_hist, self.x_hist, _ = plt.hist(data, bins=n_bins, range=x_range,
+        self.y_hist, self.x_hist, _ = plt.hist(x, bins=n_bins, range=x_range,
                                                density=density, edgecolor=edgecolor, linewidth=linewidth)
         self.x_hist = np.array([self.x_hist[i] for i in range(n_bins)]) + delta_x/2
 
@@ -178,7 +186,7 @@ def test_hist():
     p.xlabel('xlabel', loc='right')
     p.ylabel('ylabel', loc='top')
     p.text(0, 0, 'origin')
-    p.hist(data=[1, 2, 2, 3, 3], x_range=[.5, 3.5], delta_x=1)
+    p.hist(x=[1, 2, 2, 3, 3], x_range=[.5, 3.5], delta_x=1)
     print(p.x_hist)
     print(p.y_hist)
     plt.show()
@@ -206,13 +214,13 @@ def test_subplots():
         plots(0, 0).scatter(x=[1, 2], y=[2, 3])
         plots(0, 0).plot(x=extended(plots(0, 0).x_scatter, extend_ratio=.3), func=lambda x: x + 1)
 
-        plots(0, 1).hist(data=np.random.random(100) * 3, x_range=[0, 3], delta_x=1.)
+        plots(0, 1).hist(x=np.random.random(100) * 3)
         plots(0, 1).scatter(list(range(4)), [.2, .2, .2, .2], c='orange')
         plots(0, 1).plot(x=[0, 3], func=lambda x: 1/3)
 
 
 if __name__ == '__main__':
-    test_single()
-    test_hist()
-    test_multiple()
+    # test_single()
+    # test_hist()
+    # test_multiple()
     test_subplots()
