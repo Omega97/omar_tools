@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def extended(array, extend_ratio=None, x_min=None, x_max=None, ):
+def extended(array, extend_ratio=None, x_min=None, x_max=None):
     """
     extended domain for fit purposes, adds new value at head and tail of array
     :param array: array-link object
@@ -123,6 +123,14 @@ class Plot:
         self.sca()
         plt.ylabel(ylabel, **kwargs)
 
+    def set_xlim(self, x0, x1, **kwargs):
+        self.sca()
+        self.ax.set_xlim(x0, x1, **kwargs)
+
+    def set_ylim(self, y0, y1, **kwargs):
+        self.sca()
+        self.ax.set_ylim(y0, y1, **kwargs)
+
 
 class Subplots:
 
@@ -217,6 +225,8 @@ def test_subplots():
         plots(0, 1).hist(x=np.random.random(100) * 3)
         plots(0, 1).scatter(list(range(4)), [.2, .2, .2, .2], c='orange')
         plots(0, 1).plot(x=[0, 3], func=lambda x: 1/3)
+        plots(0, 1).set_xlim(-1, 4)
+        plots(0, 1).set_ylim(0, 1)
 
 
 if __name__ == '__main__':
