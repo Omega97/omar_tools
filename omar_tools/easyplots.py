@@ -49,7 +49,9 @@ class Plot:
         self.x_scatter = None
         self.y_scatter = None
         self.x_hist = None
+        self.x_hist_center = None
         self.y_hist = None
+        self.n_bins = None
 
         self._plot = None
         self._scatter = None
@@ -81,7 +83,7 @@ class Plot:
         self._errorbar = plt.errorbar(x, y, yerr=yerr, xerr=xerr, color=color, fmt=fmt, solid_capstyle=solid_capstyle,
                                       capsize=capsize, label=label, **kwargs)
 
-    def hist(self, x, x_range=None, n_bins=10, delta_x=None,
+    def hist(self, x, x_range=None, n_bins=None, delta_x=None,
              extend=False, linewidth=1.2, density=True, edgecolor='black', **kwargs):
         """
         - plot histogram
@@ -98,10 +100,27 @@ class Plot:
 
         if extend:
             x_range = [x_range[0]-delta_x/2, x_range[1]+delta_x/2]
-        n_bins = round((x_range[1] - x_range[0]) / delta_x)
-        self.y_hist, self.x_hist, _ = plt.hist(x, bins=n_bins, range=x_range, density=density,
+
+        if n_bins is None:
+            self.n_bins = round((x_range[1] - x_range[0]) / delta_x)
+        else:
+            self.n_bins = n_bins
+
+        self.y_hist, self.x_hist, _ = plt.hist(x, bins=self.n_bins, range=x_range, density=density,
                                                edgecolor=edgecolor, linewidth=linewidth, **kwargs)
-        self.x_hist_center = np.array([self.x_hist[i] for i in range(n_bins)]) + delta_x/2
+        self.x_hist_center = np.array([self.x_hist[i] for i in range(self.n_bins)]) + delta_x/2
+
+    def hist_prob(self, func):
+        """compute the area of the function for each bin"""
+        assert self.x_hist is not None
+        assert self.x_hist_center is not None
+        assert self.n_bins is not None
+        x0 = self.x_hist[0]
+        x1 = self.x_hist[-1]
+        delta_x = (x1 - x0) / self.n_bins
+        p = np.array([func(self.x_hist[i]) + 4 * func(self.x_hist_center[i]) + func(self.x_hist[i+1])
+                      for i in range(self.n_bins)]) / 6 * delta_x
+        return p
 
     def legend(self):
         self.sca()
@@ -194,10 +213,15 @@ def test_hist():
     p.xlabel('xlabel')
     p.ylabel('ylabel')
     p.text(0, 0, 'origin')
-    p.hist(x=[1, 2, 2, 3, 3], x_range=[-.5, 4.5], delta_x=1, label='data')
+    p.hist(x=np.random.normal(size=200), x_range=[-4, 4], delta_x=1, label='data')
     plt.legend()
-    print(p.x_hist)
-    print(p.y_hist)
+    print('x =', p.x_hist)
+    print('y =', p.y_hist)
+    print('sum(y) =', sum(p.y_hist))
+    v = p.hist_prob(func=lambda x: np.exp(-x**2/2) / (2 * np.pi)**.5)
+    print('p =', v)
+    print('sum(p) =', sum(v))
+    p.scatter(p.x_hist_center, v, color='orange', marker='+')
     plt.show()
 
 
@@ -231,7 +255,7 @@ def test_subplots():
 
 
 if __name__ == '__main__':
-    test_single()
+    # test_single()
     test_hist()
-    test_multiple()
-    test_subplots()
+    # test_multiple()
+    # test_subplots()
