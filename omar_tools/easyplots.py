@@ -101,7 +101,7 @@ class Plot:
         n_bins = round((x_range[1] - x_range[0]) / delta_x)
         self.y_hist, self.x_hist, _ = plt.hist(x, bins=n_bins, range=x_range, density=density,
                                                edgecolor=edgecolor, linewidth=linewidth, **kwargs)
-        self.x_hist = np.array([self.x_hist[i] for i in range(n_bins)]) + delta_x/2
+        self.x_hist_center = np.array([self.x_hist[i] for i in range(n_bins)]) + delta_x/2
 
     def legend(self):
         self.sca()
