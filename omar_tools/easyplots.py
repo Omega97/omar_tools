@@ -43,7 +43,6 @@ class Plot:
 
     def __init__(self, ax=None):
         self.ax = ax
-
         self.x_plot = None
         self.y_plot = None
         self.x_scatter = None
@@ -51,8 +50,6 @@ class Plot:
         self.x_hist = None
         self.x_hist_center = None
         self.y_hist = None
-        self.n_bins = None
-
         self._plot = None
         self._scatter = None
         self._errorbar = None
@@ -61,11 +58,11 @@ class Plot:
         if self.ax is not None:
             plt.sca(self.ax)
 
-    def scatter(self, x, y, marker=None, color=None, label='data', zorder=2, **kwargs):
+    def scatter(self, x, y, marker='+', color='k', s=50, label='data', zorder=2, **kwargs):
         self.sca()
         self.x_scatter = np.array(x)
         self.y_scatter = np.array(y)
-        self._scatter = plt.scatter(x, y, marker=marker, color=color, label=label, zorder=zorder, **kwargs)
+        self._scatter = plt.scatter(x, y, marker=marker, color=color, s=s, label=label, zorder=zorder, **kwargs)
 
     def plot(self, x, y=None, func=None, linestyle='--', label='fit', **kwargs):
         """used to make fit"""
@@ -77,14 +74,14 @@ class Plot:
         self.y_plot = np.array(y)
         self._plot = plt.plot(x, y, linestyle=linestyle, label=label, **kwargs)
 
-    def errorbar(self, x, y, yerr=None, xerr=None, color='k', fmt='none',
+    def errorbar(self, x, y, xerr=None, yerr=None, color='k', fmt='none',
                  solid_capstyle='projecting', capsize=3, label='errors', **kwargs):
         self.sca()
         self._errorbar = plt.errorbar(x, y, yerr=yerr, xerr=xerr, color=color, fmt=fmt, solid_capstyle=solid_capstyle,
                                       capsize=capsize, label=label, **kwargs)
 
     def hist(self, x, x_range=None, n_bins=None, delta_x=None,
-             extend=False, linewidth=1.2, density=True, edgecolor='black', **kwargs):
+             linewidth=1.2, density=True, edgecolor='black', **kwargs):
         """
         - plot histogram
         - set self.x, self.y
@@ -95,31 +92,28 @@ class Plot:
         if x_range is None:
             x_range = [min(x), max(x)]
 
-        if delta_x is None:
+        if delta_x is None and n_bins is not None:
             delta_x = (x_range[-1] - x_range[0]) / n_bins
 
-        if extend:
-            x_range = [x_range[0]-delta_x/2, x_range[1]+delta_x/2]
+        if n_bins is None and delta_x is not None:
+            n_bins = round((x_range[1] - x_range[0]) / delta_x)
 
-        if n_bins is None:
-            self.n_bins = round((x_range[1] - x_range[0]) / delta_x)
-        else:
-            self.n_bins = n_bins
-
-        self.y_hist, self.x_hist, _ = plt.hist(x, bins=self.n_bins, range=x_range, density=density,
+        self.y_hist, self.x_hist, _ = plt.hist(x, bins=n_bins, range=x_range, density=density,
                                                edgecolor=edgecolor, linewidth=linewidth, **kwargs)
-        self.x_hist_center = np.array([self.x_hist[i] for i in range(self.n_bins)]) + delta_x/2
+        n_bins = len(self.x_hist) - 1
+        delta_x = (self.x_hist[-1] - self.x_hist[0]) / n_bins
+        self.x_hist_center = np.array([self.x_hist[i] for i in range(n_bins)]) + delta_x/2
 
     def hist_prob(self, func):
         """compute the area of the function for each bin"""
         assert self.x_hist is not None
         assert self.x_hist_center is not None
-        assert self.n_bins is not None
+        n_bins = len(self.x_hist_center)
         x0 = self.x_hist[0]
         x1 = self.x_hist[-1]
-        delta_x = (x1 - x0) / self.n_bins
+        delta_x = (x1 - x0) / n_bins
         p = np.array([func(self.x_hist[i]) + 4 * func(self.x_hist_center[i]) + func(self.x_hist[i+1])
-                      for i in range(self.n_bins)]) / 6 * delta_x
+                      for i in range(n_bins)]) / 6 * delta_x
         return p
 
     def legend(self):
@@ -163,6 +157,9 @@ class Subplots:
         self.title = title
         self.fontsize = fontsize
 
+    def get_plots(self):
+        return self.plots
+
     def load_plots(self):
         if len(self.shape) == 2:
             self.plots = [[Plot(j) for j in i] for i in self.axs]
@@ -201,7 +198,7 @@ class Subplots:
 
 def test_single():
     p = Plot()
-    p.scatter(x=[1, 2, 3], y=[2, 3, 3])
+    p.scatter(x=[1, 2, 3], y=[2, 3, 3], s=50)
     p.plot(x=[0, 4], y=[2, 3])
     plt.title('Title')
     plt.show()
@@ -213,7 +210,7 @@ def test_hist():
     p.xlabel('xlabel')
     p.ylabel('ylabel')
     p.text(0, 0, 'origin')
-    p.hist(x=np.random.normal(size=200), x_range=[-4, 4], delta_x=1, label='data')
+    p.hist(x=np.random.normal(size=200), label='data')
     plt.legend()
     print('x =', p.x_hist)
     print('y =', p.y_hist)
@@ -243,19 +240,26 @@ def test_multiple():
 
 def test_subplots():
     with Subplots(nrows=2, ncols=2, title='Title') as plots:
-        plots(0, 0).title('subtitle')
-        plots(0, 0).scatter(x=[1, 2], y=[2, 3])
-        plots(0, 0).plot(x=extended(plots(0, 0).x_scatter, extend_ratio=.3), func=lambda x: x + 1)
 
-        plots(0, 1).hist(x=np.random.random(100) * 3)
-        plots(0, 1).scatter(list(range(4)), [.2, .2, .2, .2], c='orange')
-        plots(0, 1).plot(x=[0, 3], func=lambda x: 1/3)
-        plots(0, 1).set_xlim(-1, 4)
-        plots(0, 1).set_ylim(0, 1)
+        [[a, b], [c, d]] = plots.get_plots()
+
+        a.title('subtitle')
+        a.scatter(x=[1, 2], y=[2, 3])
+        a.plot(x=extended(plots(0, 0).x_scatter, extend_ratio=.3), func=lambda x: x + 1)
+
+        b.hist(x=np.random.random(100) * 3)
+        b.scatter(list(range(4)), [.2, .2, .2, .2], color='orange')
+        b.plot(x=[0, 3], func=lambda x: 1/3)
+        b.set_xlim(-1, 4)
+        b.set_ylim(0, 1)
+
+        c.hist(np.random.random(size=50))
+
+        d.hist(np.random.normal(size=50))
 
 
 if __name__ == '__main__':
-    # test_single()
+    test_single()
     test_hist()
-    # test_multiple()
-    # test_subplots()
+    test_multiple()
+    test_subplots()
