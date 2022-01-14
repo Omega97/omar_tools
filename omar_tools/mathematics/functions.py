@@ -98,3 +98,11 @@ def gamma_of_half_n(n):
         return double_factorial(n - 2) / 2 ** ((n - 1) / 2) * np.pi ** .5
     else:
         return factorial(n // 2 - 1)
+
+
+def chi_squared(n):
+    """chi_n ** 2 distribution"""
+    def wrap(x):
+        return (x**(n-2)*np.exp(-x)/2**n)**.5/gamma_of_half_n(n)
+    return wrap
+
