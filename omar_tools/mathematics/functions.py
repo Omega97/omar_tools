@@ -1,5 +1,5 @@
 """ lib of useful functions """
-from math import exp, tanh
+from math import exp, factorial
 import numpy as np
 
 
@@ -34,59 +34,17 @@ def poly(x, coefficients):
     return sum([x ** n * coefficients[n] for n in range(len(coefficients))])
 
 
-def identity(x=None, der=False):
-    if not der:
-        return x
-    else:
-        def f(_):
-            return 1
-        return f
+def sigmoid(x=None):
+    return 1/(1 + exp(-x))
 
 
-def sigmoid(x=None, der=False):
-    if not der:
-        return 1/(1 + exp(-x))
-    else:
-        def f(x_):
-            return sigmoid(x_) * (1 - sigmoid(x_))
-        return f
+def relu(x=None):
+    return max(x, 0)
 
 
-def th(x=None, der=False):
-    if not der:
-        return tanh(x)
-    else:
-        def f(x_):
-            return 1 - th(x_) ** 2
-        return f
-
-
-def step(x=None, der=False):
-    if not der:
-        return 1 if x >= 0 else 0
-    else:
-        def f(_):
-            return 0
-        return f
-
-
-def relu(x=None, der=False):
-    if not der:
-        return max(x, 0)
-    else:
-        def f(x_):
-            return step(x_)
-        return f
-
-
-def prelu(x=None, p=0., der=False):
+def prelu(x=None, p=0.):
     assert 0. <= p <= 1.
-    if not der:
-        return max(x, p * x)
-    else:
-        def f(_):
-            return max(1., p)
-        return f
+    return max(x, p * x)
 
 
 def add_functions(v):
@@ -114,3 +72,29 @@ def softmax(v):
     out = [exp(i) for i in v]
     s = sum(out)
     return [i/s for i in out]
+
+
+def double_factorial(n):
+    """n!!"""
+    assert type(n) is int
+    if n < 0:
+        raise ValueError('n must not be negative')
+    elif n == 0:
+        return 1
+    elif n % 2:
+        return np.product([i for i in range(1, n+1) if i % 2 == 1])
+    else:
+        return np.product([i for i in range(2, n+2) if i % 2 == 0])
+
+
+def gamma_of_half_n(n):
+    """gamma(n/2) for integer n > 0"""
+    assert type(n) is int
+    assert n > 0
+
+    if n == 1:
+        return np.pi ** .5
+    elif n % 2:
+        return double_factorial(n - 2) / 2 ** ((n - 1) / 2) * np.pi ** .5
+    else:
+        return factorial(n // 2 - 1)
