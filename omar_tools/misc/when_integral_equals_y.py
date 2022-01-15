@@ -1,7 +1,6 @@
 
-def when_integral_equals_y(fun, dx, y, max_epoch=10 ** 5):
+def when_integral_equals_y(fun, y, dx=.01, max_epoch=10 ** 5):
     """ Integrate fun numerically starting from 0, return x when integral reaches target
-
     Note:
     If a solution can't be found then the integral could not reach the target value if max_epoch steps
     """
